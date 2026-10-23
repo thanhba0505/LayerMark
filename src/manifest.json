@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LayerMark - Visual Tag & Environment Manager",
   "version": "1.0.0",
-  "description": "Quản lý tag trực quan, linh hoạt cho website và môi trường phát triển (Prod, Staging, Dev, Local).",
+  "description": "Visual environment indicators and website tag manager with absolute CSS isolation (Manifest V3).",
   "permissions": [
     "storage",
     "tabs",

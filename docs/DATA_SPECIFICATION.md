@@ -1,66 +1,66 @@
-# LayerMark — Đặc Tả Dữ Liệu & Schema (Data Specification)
+# LayerMark — Data Specifications & JSON Schema
 
-Tài liệu này quy định cấu trúc dữ liệu JSON, các interface, kiểu quy tắc so khớp và định dạng Import/Export của tiện ích **LayerMark**.
+This document specifies the TypeScript interfaces, JSON schema models, URL matching rule types, and Import/Export formats for the **LayerMark** extension.
 
 ---
 
-## 1. Cấu trúc Mô hình Dữ liệu (TypeScript Definitions)
+## 1. Core Data Models (TypeScript Definitions)
 
 ### 1.1. Tag Entity (`LayerMarkTag`)
 
 ```typescript
 export interface LayerMarkTag {
-  id: string;               // UUID duy nhất (ví dụ: "tag_9f82d1...")
-  name: string;             // Tên hiển thị (ví dụ: "PRODUCTION", "STAGING", "DEV")
-  description?: string;     // Ghi chú mô tả ngắn
-  enabled: boolean;         // Trạng thái bật/tắt (true/false)
-  priority: number;         // Thứ tự ưu tiên (0, 1, 2... Số nhỏ xếp trước)
-  project?: string;         // Phân nhóm dự án (ví dụ: "Core Banking", "CRM")
+  id: string;               // Unique UUID (e.g., "tag_9f82d1...")
+  name: string;             // Display name (e.g., "PRODUCTION", "STAGING", "DEV")
+  description?: string;     // Optional descriptive note
+  enabled: boolean;         // Active status toggle (true/false)
+  priority: number;         // Priority order (0, 1, 2... Lower number renders first)
+  project?: string;         // Project grouping (e.g., "Core Banking", "CRM")
   environment: EnvironmentType; // "production" | "staging" | "development" | "local" | "testing" | "custom"
-  style: TagStyle;          // Cấu hình giao diện tag
-  rules: UrlRule[];         // Danh sách quy tắc URL áp dụng cho tag này
-  createdAt: number;        // Epoch timestamp mili-giây
-  updatedAt: number;        // Epoch timestamp mili-giây
+  style: TagStyle;          // Visual appearance and positioning configuration
+  rules: UrlRule[];         // List of URL matching rules triggering this tag
+  createdAt: number;        // Epoch timestamp (ms)
+  updatedAt: number;        // Epoch timestamp (ms)
 }
 ```
 
-### 1.2. Cấu hình Giao diện Tag (`TagStyle`)
+### 1.2. Visual Styling Configuration (`TagStyle`)
 
 ```typescript
 export interface TagStyle {
-  bgColor: string;          // Màu nền Hex/RGBA (mặc định: "#EF4444")
-  textColor: string;        // Màu chữ Hex/RGBA (mặc định: "#FFFFFF")
-  borderColor?: string;     // Màu viền (tùy chọn)
-  borderWidth?: number;     // Độ dày viền (px, mặc định: 0)
-  borderRadius?: number;    // Bo góc (px, mặc định: 6)
-  opacity?: number;         // Độ mờ đục (0.1 -> 1.0, mặc định: 0.95)
-  fontSize?: number;        // Kích thước chữ (px, mặc định: 12)
+  bgColor: string;          // Background color Hex or RGBA (default: "#EF4444")
+  textColor: string;        // Text color Hex or RGBA (default: "#FFFFFF")
+  borderColor?: string;     // Border color (optional)
+  borderWidth?: number;     // Border thickness in px (default: 0)
+  borderRadius?: number;    // Corner radius in px (default: 6)
+  opacity?: number;         // Opacity (0.1 to 1.0, default: 0.95)
+  fontSize?: number;        // Font size in px (default: 12)
   size: TagSize;            // "small" | "medium" | "large" | "custom"
-  icon?: string;            // Tên icon Lucide hoặc ký tự emoji (ví dụ: "ShieldAlert", "Server", "🔥")
-  anchorPosition: AnchorPosition; // Vị trí neo màn hình
-  offsetX?: number;         // Khoảng cách mép ngang (px)
-  offsetY?: number;         // Khoảng cách mép dọc (px)
-  pulseAnimation?: boolean; // Hiệu ứng nhịp đập cảnh báo (dành cho Prod)
+  icon?: string;            // Lucide icon identifier or emoji (e.g., "ShieldAlert", "Server", "🔥")
+  anchorPosition: AnchorPosition; // Viewport docking position
+  offsetX?: number;         // Horizontal margin offset in px
+  offsetY?: number;         // Vertical margin offset in px
+  pulseAnimation?: boolean; // Subtle pulsing badge dot for critical environments (Prod)
 }
 ```
 
-### 1.3. Quy tắc Khớp URL (`UrlRule`)
+### 1.3. URL Matching Rule (`UrlRule`)
 
 ```typescript
 export interface UrlRule {
-  id: string;               // UUID định danh rule
+  id: string;               // Unique rule identifier
   type: RuleMatchType;      // "exact-domain" | "wildcard-domain" | "port" | "path-pattern" | "regex"
-  pattern: string;          // Chuỗi mẫu so khớp
-  description?: string;     // Ghi chú của rule
-  enabled: boolean;         // Bật/tắt riêng lẻ từng rule
+  pattern: string;          // Target matching pattern string
+  description?: string;     // Optional rule note
+  enabled: boolean;         // Individual rule active toggle
 }
 ```
 
 ---
 
-## 2. Định dạng Tệp Import / Export JSON
+## 2. Import / Export JSON Format
 
-Khi người dùng sao lưu hoặc chia sẻ cấu hình tag cho đồng đội, tiện ích xuất file JSON chuẩn theo định dạng sau:
+When users back up configurations or share environment tags with team members, LayerMark exports a standardized JSON file:
 
 ```json
 {
@@ -71,10 +71,10 @@ Khi người dùng sao lưu hoặc chia sẻ cấu hình tag cho đồng đội,
     {
       "id": "tag_prod_preset",
       "name": "PRODUCTION",
-      "description": "Cảnh báo môi trường thực tế, cẩn trọng thao tác dữ liệu",
+      "description": "Live production environment — handle actions with caution",
       "enabled": true,
       "priority": 0,
-      "project": "Chung",
+      "project": "General",
       "environment": "production",
       "style": {
         "bgColor": "#DC2626",
@@ -106,10 +106,10 @@ Khi người dùng sao lưu hoặc chia sẻ cấu hình tag cho đồng đội,
     {
       "id": "tag_staging_preset",
       "name": "STAGING",
-      "description": "Môi trường thử nghiệm trước khi release",
+      "description": "Pre-release testing environment",
       "enabled": true,
       "priority": 1,
-      "project": "Chung",
+      "project": "General",
       "environment": "staging",
       "style": {
         "bgColor": "#D97706",
@@ -135,10 +135,10 @@ Khi người dùng sao lưu hoặc chia sẻ cấu hình tag cho đồng đội,
     {
       "id": "tag_local_preset",
       "name": "LOCAL DEV",
-      "description": "Môi trường lập trình trên máy nội bộ",
+      "description": "Local workstation development servers",
       "enabled": true,
       "priority": 2,
-      "project": "Chung",
+      "project": "General",
       "environment": "local",
       "style": {
         "bgColor": "#2563EB",
@@ -186,12 +186,12 @@ Khi người dùng sao lưu hoặc chia sẻ cấu hình tag cho đồng đội,
 
 ---
 
-## 3. Quy chuẩn Xác thực Dữ liệu (Schema Validation Rules)
+## 3. Schema Validation & Sanitization Rules
 
-Khi nhập file JSON từ bên ngoài:
-1. **Kiểm tra Header**: Trường `app === "LayerMark"`.
-2. **Kiểm tra Mảng Tag**: `Array.isArray(tags)` và có ít nhất 0 phần tử.
-3. **Làm sạch (Sanitize)**:
-   - Các trường màu sắc `bgColor` và `textColor` chỉ chấp nhận mã Hex hợp lệ (`#xxxxxx`) hoặc định dạng màu an toàn, loại bỏ các chuỗi chứa `javascript:` hoặc mã độc.
-   - Loại bỏ các ký tự HTML có khả năng gây XSS trong trường `name`, `description` và `pattern`.
-4. **Giải quyết Trùng lặp ID**: Tự động sinh ID mới nếu ID đã tồn tại trong local storage khi chọn chế độ "Merge" (Gộp).
+When importing external JSON files:
+1. **Header Verification**: Check `app === "LayerMark"`.
+2. **Tag Array Integrity**: Verify `Array.isArray(tags)`.
+3. **Color & Input Sanitization**:
+   - `bgColor` and `textColor` must validate against standard Hex/RGBA formats; reject any values containing `javascript:` or malicious patterns.
+   - Strip unsafe HTML tags from `name`, `description`, and `pattern` fields to prevent XSS.
+4. **Collision Handling**: In "Merge" mode, generate fresh UUIDs for any tag or rule IDs that already exist in local storage.

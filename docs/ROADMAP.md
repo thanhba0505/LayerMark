@@ -1,86 +1,86 @@
-# LayerMark — Kế Hoạch Triển Khai & Lộ Trình (Roadmap)
+# LayerMark — Implementation Plan & Roadmap
 
-Lộ trình triển khai chi tiết cho tiện ích mở rộng **LayerMark** theo phương pháp Clean Architecture & TDD.
+Implementation roadmap for the **LayerMark** extension following Clean Architecture and Test-Driven Development principles.
 
 ---
 
-## 🗺️ Tổng quan 5 Giai đoạn Triển khai
+## 🗺️ 5-Phase Implementation Overview
 
 ```mermaid
 flowchart LR
-    P0["Giai đoạn 0<br/>Khởi tạo & Docs<br/>(HOÀN TẤT)"] --> P1["Giai đoạn 1<br/>Core Engine & Storage"]
-    P1 --> P2["Giai đoạn 2<br/>Content Script & Shadow DOM"]
-    P2 --> P3["Giai đoạn 3<br/>Popup Extension"]
-    P3 --> P4["Giai đoạn 4<br/>Options Dashboard"]
-    P4 --> P5["Giai đoạn 5<br/>Kiểm thử E2E & Đóng gói"]
+    P0["Phase 0<br/>Init & Architecture<br/>(COMPLETED)"] --> P1["Phase 1<br/>Core Engine & Storage"]
+    P1 --> P2["Phase 2<br/>Content Script & Shadow DOM"]
+    P2 --> P3["Phase 3<br/>Toolbar Popup"]
+    P3 --> P4["Phase 4<br/>Options Dashboard"]
+    P4 --> P5["Phase 5<br/>E2E Polish & Packaging"]
 ```
 
 ---
 
-## Giai đoạn 0: Khởi tạo Kiến trúc & Tài liệu Dự án (Đã Hoàn Tất)
-- [x] Khởi tạo git repository và cấu trúc thư mục.
-- [x] Cài đặt `pnpm`, Vite, React 18, TypeScript, Tailwind CSS, Lucide Icons.
-- [x] Viết file quy chuẩn agent `AGENTS.md`.
-- [x] Thiết lập workspace skill `.agents/skills/layermark-dev/SKILL.md`.
-- [x] Soạn thảo `docs/ARCHITECTURE.md`, `docs/DATA_SPECIFICATION.md`, `docs/ROADMAP.md`.
-- [x] Tạo file build `vite.config.ts` hỗ trợ Manifest V3 đa điểm vào (multi-entry).
-- [x] Kiểm thử build thành công ra thư mục `dist/`.
+## Phase 0: Scaffolding, Architecture & Documentation (Completed)
+- [x] Initialize Git repository and project directory structure.
+- [x] Configure `pnpm`, Vite 6, React 18, TypeScript, Tailwind CSS, Lucide Icons.
+- [x] Author AI Agent guidelines [`AGENTS.md`](../AGENTS.md).
+- [x] Set up workspace developer skill [`.agents/skills/layermark-dev/SKILL.md`](../.agents/skills/layermark-dev/SKILL.md).
+- [x] Draft technical specifications: [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md), [`docs/DATA_SPECIFICATION.md`](./DATA_SPECIFICATION.md), and [`docs/ROADMAP.md`](./ROADMAP.md).
+- [x] Create multi-entry Manifest V3 build pipeline in [`vite.config.ts`](../vite.config.ts).
+- [x] Verify clean compilation output to `dist/`.
 
 ---
 
-## Giai đoạn 1: Core Engine, Storage & Presets
-- [ ] Xây dựng module `src/shared/storage.ts`: Wrapper an toàn kiểu dữ liệu cho `chrome.storage.local`.
-- [ ] Xây dựng bộ quy tắc mẫu mặc định `src/shared/presets.ts`: Production, Staging, Dev, Localhost.
-- [ ] Xây dựng `src/shared/matcher.ts`: URL Matching Engine hỗ trợ 5 chế độ:
+## Phase 1: Core Engine, Storage & Built-in Presets
+- [ ] Implement `src/shared/storage.ts`: Strongly typed wrapper for `chrome.storage.local`.
+- [ ] Implement `src/shared/presets.ts`: Default presets for Production, Staging, Dev, and Localhost.
+- [ ] Implement `src/shared/matcher.ts`: URL Matching Engine supporting 5 pattern types:
   - Exact domain
   - Wildcard subdomain (`*.example.com`)
-  - Port (`localhost:3000`, `127.0.0.1:8080`)
+  - Port matching (`localhost:3000`, `127.0.0.1:8080`)
   - Path prefix / glob (`site.com/admin/*`)
   - Regex
-- [ ] Viết unit tests kiểm thử độ chính xác của Matcher Engine.
+- [ ] Add unit tests covering matcher rules, edge cases, and ports.
 
 ---
 
-## Giai đoạn 2: Content Script & Shadow DOM Injection
-- [ ] Xây dựng `src/content/shadow-host.ts`: Khởi tạo và quản lý Shadow Root cách ly 100%.
-- [ ] Xây dựng `src/content/tag-renderer.ts`: Render danh sách tag theo các Anchor Zone (`top-left`, `top-right`, `bottom-left`, `bottom-right`, `top-banner`, `ribbon`).
-- [ ] Xử lý xếp chồng tag (stacking) tự động có khoảng cách giãn dòng.
-- [ ] Thêm hiệu ứng thu nhỏ khi rê chuột (hover to minimize) để không che nội dung trang web.
-- [ ] Tích hợp theo dõi thay đổi URL trên Single Page Applications (SPA).
-- [ ] Lắng nghe `chrome.storage.onChanged` để cập nhật tag tức thì không cần F5 trang web.
+## Phase 2: Content Script & Shadow DOM Injection
+- [ ] Implement `src/content/shadow-host.ts`: Initialize and manage isolated Shadow Root.
+- [ ] Implement `src/content/tag-renderer.ts`: Render badge list within designated Anchor Zones (`top-left`, `top-right`, `bottom-left`, `bottom-right`, `top-banner`, `ribbon`).
+- [ ] Implement automatic badge stacking with consistent flexbox gaps.
+- [ ] Add hover-to-minimize behavior so badges never obstruct interactive elements underneath.
+- [ ] Hook into SPA route transitions (`popstate`, `pushState`, `replaceState`).
+- [ ] Subscribe to `chrome.storage.onChanged` for instant zero-reload badge updates.
 
 ---
 
-## Giai đoạn 3: Extension Popup (Tab hiện tại)
-- [ ] Hiển thị URL và hostname của tab hiện tại.
-- [ ] Liệt kê danh sách các tag đang áp dụng (matching) trên trang này.
-- [ ] Cho phép bật/tắt nhanh từng tag ngay tại popup.
-- [ ] Nút bấm nhanh "+ Thêm tag cho website này" tự động điền sẵn domain của tab vào modal tạo.
-- [ ] Nút mở trang Quản trị tập trung (Options Page).
+## Phase 3: Extension Popup (Active Tab)
+- [ ] Display current tab URL and hostname.
+- [ ] List all active tags matching the current tab.
+- [ ] Provide quick toggle switches for each matched tag.
+- [ ] Add quick "+ Add tag for this domain" shortcut button pre-populating current host.
+- [ ] Add shortcut link to open full Options Dashboard.
 
 ---
 
-## Giai đoạn 4: Options Dashboard (Quản lý Tập Trung)
-- [ ] **Giao diện Dashboard**:
-  - Tìm kiếm tag theo tên, domain, ghi chú.
-  - Bộ lọc theo môi trường: Tất cả, Production, Staging, Development, Local, Custom.
-  - Phân nhóm tag theo Dự án (Project) hoặc Môi trường (Environment).
-- [ ] **Thao tác Tag (CRUD)**:
-  - Tạo mới tag với modal chi tiết.
-  - Chỉnh sửa thông tin, màu nền, màu chữ, icon, kích thước, vị trí anchor.
-  - Nhân bản tag (Duplicate).
-  - Bật/tắt trạng thái tag.
-  - Xóa tag có hộp thoại xác nhận.
-- [ ] **Live Preview theo thời gian thực**: Xem trước chính xác giao diện tag khi đang thay đổi màu sắc, icon, kích thước.
-- [ ] **Kéo thả sắp xếp thứ tự ưu tiên (Drag & Drop)**: Điều chỉnh vị trí ưu tiên hiển thị trên màn hình.
-- [ ] **Sao lưu & Chia sẻ (Import/Export JSON)**:
-  - Xuất toàn bộ hoặc chọn lọc tag ra file `.json`.
-  - Nhập file `.json` có kiểm tra hợp lệ schema (chọn ghi đè hoặc gộp dữ liệu).
+## Phase 4: Options Dashboard (Centralized Management)
+- [ ] **Dashboard Layout**:
+  - Search tags by name, pattern, or note.
+  - Filter by environment: All, Production, Staging, Development, Local, Custom.
+  - Group tags by Project or Environment.
+- [ ] **Tag CRUD Operations**:
+  - Create new tag modal with comprehensive visual customizations.
+  - Edit background color, text color, icon, size, and anchor position.
+  - Duplicate tag shortcut.
+  - Toggle tag active status.
+  - Delete tag with confirmation dialog.
+- [ ] **Real-time Live Preview**: Interactive preview box updating synchronously on color, text, or icon change.
+- [ ] **Drag & Drop Priority Reordering**: Adjust stacking order visually.
+- [ ] **Import / Export JSON**:
+  - Export all or selected tags to `.json`.
+  - Import `.json` with schema validation (overwrite or merge modes).
 
 ---
 
-## Giai đoạn 5: Đánh giá Chất lượng, Tối ưu & Đóng gói
-- [ ] Kiểm tra tương thích CSP trên các website khắt khe (GitHub, Twitter, Banking, AWS Console).
-- [ ] Đảm bảo zero-leakage CSS giữa host page và Shadow DOM.
-- [ ] Tối ưu dung lượng bundle extension (dưới 300KB).
-- [ ] Tạo script đóng gói extension thành file `.zip` sẵn sàng upload lên Chrome Web Store.
+## Phase 5: Verification, Quality Assurance & Packaging
+- [ ] Test CSP compatibility across strict enterprise sites (GitHub, AWS Console, Twitter).
+- [ ] Verify zero CSS leakage between host page and Shadow DOM.
+- [ ] Optimize bundle size (under 300KB).
+- [ ] Add release packaging script generating ready-to-publish `.zip` archives for Chrome Web Store.

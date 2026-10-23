@@ -27,7 +27,7 @@ export default function App() {
                   Dashboard
                 </span>
               </h1>
-              <p className="text-xs text-slate-500">Quản lý nhãn dán nhận diện môi trường & website</p>
+              <p className="text-xs text-slate-500">Visual website tagging & environment indicator manager</p>
             </div>
           </div>
 
@@ -42,7 +42,7 @@ export default function App() {
             </button>
             <button className="flex items-center space-x-1.5 px-4 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
               <Plus className="w-3.5 h-3.5" />
-              <span>Tạo Tag mới</span>
+              <span>Create New Tag</span>
             </button>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function App() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm theo tên tag, domain, path..."
+              placeholder="Search by tag name, domain, path..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-xs"
@@ -74,7 +74,7 @@ export default function App() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                {tab === 'all' ? 'Tất cả' : tab}
+                {tab === 'all' ? 'All Environments' : tab}
               </button>
             ))}
           </div>
@@ -87,15 +87,15 @@ export default function App() {
               <Layers className="w-7 h-7" />
             </div>
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-              Sẵn sàng tạo nhãn dán môi trường đầu tiên
+              Ready to create your first environment badge
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
-              LayerMark giúp bạn phân biệt rõ ràng giữa Production, Staging, Dev và Localhost bằng các badge thông minh, tùy biến cao và hoạt động 100% offline.
+              LayerMark empowers you to clearly distinguish between Production, Staging, Dev, and Localhost using smart, highly customizable badges with absolute CSS isolation.
             </p>
             <div className="pt-2 flex justify-center gap-3">
               <button className="px-4 py-2 text-sm font-medium rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition flex items-center space-x-2">
                 <Plus className="w-4 h-4" />
-                <span>Tạo Tag mẫu (Presets)</span>
+                <span>Load Default Presets</span>
               </button>
             </div>
           </div>

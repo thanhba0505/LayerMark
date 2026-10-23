@@ -49,7 +49,7 @@ export default function App() {
         <button
           onClick={openOptionsPage}
           className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          title="Mở trang quản lý"
+          title="Open Dashboard"
         >
           <Settings className="w-4 h-4" />
         </button>
@@ -59,10 +59,10 @@ export default function App() {
       <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
         <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-500">
           <Globe className="w-3.5 h-3.5 text-slate-400" />
-          <span>Tab hiện tại</span>
+          <span>Active Tab Host</span>
         </div>
         <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-          {currentDomain || 'Chưa phát hiện'}
+          {currentDomain || 'Not detected'}
         </div>
       </div>
 
@@ -70,27 +70,27 @@ export default function App() {
       <div className="flex-1 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Tag đang khớp ({activeCount})
+            Matched Tags ({activeCount})
           </span>
           <button
             onClick={openOptionsPage}
             className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center space-x-1"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Thêm tag</span>
+            <span>Add Tag</span>
           </button>
         </div>
 
         <div className="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/20">
           <Tag className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Chưa có tag nào được kích hoạt cho URL này.
+            No active tags matching this URL.
           </p>
           <button
             onClick={openOptionsPage}
             className="mt-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs transition"
           >
-            Tạo tag mới cho domain này
+            Create tag for this domain
           </button>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function App() {
           onClick={openOptionsPage}
           className="flex items-center space-x-1 hover:text-indigo-600 transition"
         >
-          <span>Trang quản trị</span>
+          <span>Dashboard</span>
           <ExternalLink className="w-3 h-3" />
         </button>
       </div>

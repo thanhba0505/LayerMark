@@ -1,68 +1,68 @@
 # LayerMark — AI Agent & Developer Guidelines
 
-Chào mừng bạn đến với codebase của **LayerMark** — Tiện ích mở rộng Chrome/Chromium (Manifest V3) giúp đánh dấu, gắn tag môi trường trực quan và phân biệt website (Production, Staging, Dev, Local) với độ cô lập CSS tuyệt đối và lưu trữ 100% offline.
+Welcome to the **LayerMark** codebase — a modern Chrome/Chromium extension (Manifest V3) for visual website environment tagging and indicators (Production, Staging, Dev, Local) featuring strict CSS isolation and 100% offline local storage.
 
-Tài liệu này (`AGENTS.md`) là bộ quy chuẩn và chỉ dẫn bắt buộc dành cho AI Agent (như Antigravity) và lập trình viên khi phát triển, mở rộng hoặc bảo trì codebase này.
+This document (`AGENTS.md`) is the mandatory guideline and operational manual for AI agents (such as Antigravity) and human developers when maintaining, extending, or refactoring this codebase.
 
 ---
 
-## 1. Triết lý thiết kế cốt lõi (Core Principles)
+## 1. Core Principles
 
 1. **Local-First & Zero Backend**:
-   - Mọi dữ liệu (tag, rules, settings) lưu trữ độc quyền trong `chrome.storage.local`.
-   - Tuyệt đối không gửi telemetry, không gọi API ngoại vi, không yêu cầu đăng nhập/tài khoản.
-2. **CSS Isolation tuyệt đối qua Shadow DOM**:
-   - Content Script **bắt buộc** phải render overlay UI bên trong **Shadow Root** (`attachShadow({ mode: 'open' })`).
-   - Tuyệt đối không để CSS của website gốc làm vỡ layout của Tag, và ngược lại không để CSS của Tag rò rỉ làm ảnh hưởng website của người dùng.
-3. **Non-Intrusive UX (Không cản trở trải nghiệm web)**:
-   - Overlay container bao quanh toàn màn hình phải luôn có `pointer-events: none`.
-   - Chỉ các tag badge/nút tương tác cụ thể mới có `pointer-events: auto`.
-   - Hỗ trợ tính năng thu nhỏ / làm mờ khi rê chuột (hover to minimize) để không che khuất nội dung quan trọng của trang web.
-4. **Hiệu năng & Khởi động tức thì (Zero Latency)**:
-   - Thuật toán so khớp URL (Matching Engine) phải đạt tốc độ tối đa, O(N) với N là số lượng rule đang kích hoạt.
-   - Hỗ trợ tốt Single Page Applications (SPA) bằng cách lắng nghe URL change (`popstate`, `pushState`/`replaceState` & `chrome.tabs.onUpdated`).
+   - All data (tags, rules, settings) is stored exclusively in `chrome.storage.local`.
+   - Never send telemetry, never make external API calls, and never require user accounts or login.
+2. **Absolute CSS Isolation via Shadow DOM**:
+   - Content scripts **must** render overlay UI inside a **Shadow Root** (`attachShadow({ mode: 'open' })`).
+   - Host website styles must never break Tag Badge layout, and Tag styles must never leak into or alter the host page layout.
+3. **Non-Intrusive UX**:
+   - The full-screen overlay host container must strictly have `pointer-events: none`.
+   - Only interactive badge elements and buttons have `pointer-events: auto`.
+   - Support hover-to-minimize / hover-to-dim so badges never obstruct critical web content.
+4. **Zero-Latency & SPA Support**:
+   - The URL matching engine must be ultra-fast: O(N) where N is the number of active rules.
+   - Fully support Single Page Applications (SPAs) by listening to history navigation (`popstate`, `pushState`, `replaceState`, and `chrome.tabs.onUpdated`).
 
 ---
 
-## 2. Kiến trúc thư mục (Directory Structure)
+## 2. Directory Structure
 
 ```
 LayerMark/
 ├── .agents/
 │   └── skills/
 │       └── layermark-dev/
-│           └── SKILL.md            # Skill hướng dẫn quy trình dev, build, debug extension
+│           └── SKILL.md            # Skill runbook for extension dev, build, and debug
 ├── docs/
-│   ├── ARCHITECTURE.md             # Chi tiết kiến trúc Shadow DOM, storage, URL matching
-│   ├── DATA_SPECIFICATION.md       # Đặc tả schema JSON, types, rule types, preset data
-│   └── ROADMAP.md                  # Lộ trình triển khai 5 giai đoạn
+│   ├── ARCHITECTURE.md             # In-depth architectural design & Shadow DOM specs
+│   ├── DATA_SPECIFICATION.md       # JSON schema, TypeScript interfaces, and presets
+│   └── ROADMAP.md                  # 5-phase development roadmap
 ├── public/
-│   └── icons/                      # Icon tiện ích (16, 48, 128)
+│   └── icons/                      # Extension icons (16, 48, 128)
 ├── src/
 │   ├── background/
 │   │   └── index.ts                # Service worker: Tab updates, badge counters, hot-sync
 │   ├── content/
-│   │   ├── index.ts                # Content script entry: chèn host container & Shadow DOM
-│   │   ├── shadow-host.ts          # Quản lý vòng đời Shadow Root
-│   │   └── tag-renderer.ts         # Xếp hàng tag theo Anchor Point và rendering
-│   ├── options/                    # Trang Dashboard toàn màn hình (React + Tailwind)
+│   │   ├── index.ts                # Content script entry: Shadow DOM injection
+│   │   ├── shadow-host.ts          # Shadow Root lifecycle manager
+│   │   └── tag-renderer.ts         # Tag badge layout, anchor stacking, and render logic
+│   ├── options/                    # Fullscreen dashboard page (React + Tailwind)
 │   │   ├── App.tsx
 │   │   ├── main.tsx
 │   │   ├── index.html
-│   │   └── components/             # Modal tạo/sửa tag, Live Preview, Tag List, Import/Export
-│   ├── popup/                      # Popup nhỏ khi click icon extension
+│   │   └── components/             # Modal editor, live preview, tag list, import/export
+│   ├── popup/                      # Extension toolbar popup
 │   │   ├── App.tsx
 │   │   ├── main.tsx
 │   │   ├── index.html
-│   │   └── components/             # Quick toggle, tag match list, quick add
+│   │   └── components/             # Quick toggle, matched tag list, quick add
 │   ├── shared/
 │   │   ├── types.ts                # TypeScript types & interfaces
-│   │   ├── storage.ts              # Type-safe wrapper cho chrome.storage.local
-│   │   ├── matcher.ts              # URL Matcher Engine (Exact, Wildcard, Port, Path, Regex)
-│   │   └── presets.ts              # Mẫu tag có sẵn (Prod, Staging, Dev, Localhost)
+│   │   ├── storage.ts              # Type-safe wrapper for chrome.storage.local
+│   │   ├── matcher.ts              # URL matching engine (Exact, Wildcard, Port, Path, Regex)
+│   │   └── presets.ts              # Built-in presets (Prod, Staging, Dev, Localhost)
 │   ├── styles/
 │   │   └── globals.css             # Tailwind base & utilities
-│   └── manifest.json               # Chrome Extension Manifest V3
+│   └── manifest.json               # Chrome Extension Manifest V3 configuration
 ├── package.json
 ├── tailwind.config.js
 ├── tsconfig.json
@@ -71,42 +71,42 @@ LayerMark/
 
 ---
 
-## 3. Quy chuẩn viết Code (Coding Standards)
+## 3. Coding Standards
 
-- **Ngôn ngữ**: TypeScript ở chế độ nghiêm ngặt (`strict: true`). Không được dùng `any`; hãy định nghĩa interface tường minh trong `src/shared/types.ts`.
-- **UI & Icons**: Sử dụng React 18, Tailwind CSS và `lucide-react`. Đảm bảo hỗ trợ cả Dark Mode và Light Mode.
+- **Language**: TypeScript in strict mode (`strict: true`). Avoid `any`; define explicit models in `src/shared/types.ts`.
+- **UI & Icons**: React 18, Tailwind CSS, and `lucide-react`. Support both Dark Mode and Light Mode seamlessly.
 - **Chrome Extension API**:
-  - Luôn kiểm tra sự tồn tại của `chrome?.storage?.local` trước khi gọi để tránh crash khi chạy dev trong trình duyệt thông thường.
-  - Sử dụng sự kiện `chrome.storage.onChanged` để cập nhật trạng thái UI tự động trên tất cả các tab đang mở.
-- **Xử lý Import/Export**:
-  - Dữ liệu export ra JSON phải kèm version metadata (`app: 'LayerMark'`, `version: '1.0.0'`).
-  - Dữ liệu import vào phải đi qua bước validate schema, sanitize dữ liệu và cho phép chọn ghi đè (overwrite) hoặc gộp thêm (merge).
+  - Always guard `chrome?.storage?.local` access to prevent crashes in non-extension browser preview environments.
+  - Rely on `chrome.storage.onChanged` to reactively update the UI across all open tabs simultaneously without manual page reload.
+- **Import / Export Handling**:
+  - Exported JSON must include version metadata (`app: 'LayerMark'`, `version: '1.0.0'`).
+  - Imported JSON must undergo schema validation, sanitization (prevent XSS / injection), and offer an overwrite vs. merge option.
 
 ---
 
-## 4. Lệnh thao tác trong dự án (Developer Commands)
+## 4. Developer Commands
 
 ```bash
-# Cài đặt thư viện (Sử dụng pnpm)
+# Install dependencies (use pnpm)
 pnpm install
 
-# Kiểm tra kiểu dữ liệu TypeScript
+# Type check TypeScript codebase
 pnpm run type-check
 
-# Build extension ra thư mục dist/
+# Build extension to dist/ folder
 pnpm run build
 
-# Chạy dev server xem trước UI
+# Start preview dev server
 pnpm run dev
 ```
 
 ---
 
-## 5. Quy trình nạp Extension vào trình duyệt để kiểm thử
+## 5. Loading Unpacked Extension into Browser for Testing
 
-1. Chạy lệnh: `pnpm run build`
-2. Mở Google Chrome hoặc Microsoft Edge, truy cập: `chrome://extensions/`
-3. Bật công tắc **Developer mode** (Chế độ dành cho nhà phát triển) ở góc phải phía trên.
-4. Bấm nút **Load unpacked** (Tải tiện ích đã giải nén).
-5. Chọn thư mục `dist/` bên trong thư mục dự án `LayerMark`.
-6. Ghim extension lên thanh công cụ và kiểm thử popup, options page và content script trên các trang web mục tiêu.
+1. Run: `pnpm run build`
+2. Open Google Chrome, Microsoft Edge, or Brave, and navigate to: `chrome://extensions/`
+3. Toggle on **Developer mode** in the top right corner.
+4. Click **Load unpacked**.
+5. Select the `dist/` directory inside the `LayerMark` project workspace.
+6. Pin the extension to the toolbar and test the popup, options dashboard, and injected badges across target websites.
