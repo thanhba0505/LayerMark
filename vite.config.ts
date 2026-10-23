@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, build as viteBuild } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import fs from 'fs';
@@ -7,10 +7,31 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'copy-extension-assets',
-      closeBundle() {
+      name: 'bundle-content-script-and-assets',
+      async closeBundle() {
+        if (process.env.VITEST) return;
         // Ensure dist directory exists
         fs.mkdirSync('dist', { recursive: true });
+
+        // Bundle content script as self-contained IIFE (no imports)
+        await viteBuild({
+          configFile: false,
+          resolve: {
+            alias: {
+              '@': resolve(__dirname, 'src'),
+            },
+          },
+          build: {
+            emptyOutDir: false,
+            outDir: 'dist/content',
+            lib: {
+              entry: resolve(__dirname, 'src/content/index.ts'),
+              name: 'LayerMarkContentScript',
+              formats: ['iife'],
+              fileName: () => 'index.js',
+            },
+          },
+        });
 
         // Copy manifest.json to dist/manifest.json
         if (fs.existsSync('src/manifest.json')) {
@@ -41,15 +62,11 @@ export default defineConfig({
         popup: resolve(__dirname, 'src/popup/index.html'),
         options: resolve(__dirname, 'src/options/index.html'),
         background: resolve(__dirname, 'src/background/index.ts'),
-        content: resolve(__dirname, 'src/content/index.ts'),
       },
       output: {
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === 'background') {
             return 'background/index.js';
-          }
-          if (chunkInfo.name === 'content') {
-            return 'content/index.js';
           }
           return 'assets/[name]-[hash].js';
         },

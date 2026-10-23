@@ -1,42 +1,77 @@
 /**
  * LayerMark Content Script Entrypoint
- * Injects Shadow DOM container and coordinates live tag rendering on matched URLs.
+ * Controls overlay lifecycle, URL matching, and real-time reactive re-rendering.
  */
 
-const HOST_ELEMENT_ID = 'layermark-root-container';
+import { setupShadowHost, ShadowHostManager } from './shadow-host';
+import { renderActiveTags } from './tag-renderer';
+import { getTags, getSettings, subscribeToStorageChanges } from '../shared/storage';
+import { getMatchingTags } from '../shared/matcher';
 
-function initLayerMark() {
-  if (document.getElementById(HOST_ELEMENT_ID)) {
+let hostManager: ShadowHostManager | null = null;
+let lastEvaluatedUrl = '';
+
+async function updateOverlay(force = false) {
+  const currentUrl = window.location.href;
+  if (!force && currentUrl === lastEvaluatedUrl) {
     return;
   }
+  lastEvaluatedUrl = currentUrl;
 
-  // Create isolated host element
-  const host = document.createElement('div');
-  host.id = HOST_ELEMENT_ID;
-  host.style.position = 'fixed';
-  host.style.zIndex = '2147483647';
-  host.style.top = '0';
-  host.style.left = '0';
-  host.style.width = '100vw';
-  host.style.height = '100vh';
-  host.style.pointerEvents = 'none';
+  try {
+    if (!hostManager) {
+      hostManager = setupShadowHost();
+    }
 
-  // Attach Shadow DOM for 100% CSS isolation
-  const shadowRoot = host.attachShadow({ mode: 'open' });
+    const [tags, settings] = await Promise.all([getTags(), getSettings()]);
+    const matched = getMatchingTags(currentUrl, tags);
 
-  // Add initial container inside shadow DOM
-  const container = document.createElement('div');
-  container.className = 'layermark-viewport-container';
-  shadowRoot.appendChild(container);
+    renderActiveTags(hostManager, matched, settings);
+  } catch (err) {
+    console.error('[LayerMark Content Script] Failed to update overlay:', err);
+  }
+}
 
-  document.documentElement.appendChild(host);
-  console.log('[LayerMark] Injected isolated overlay into host page.');
+function initContentScript() {
+  // Initial render
+  updateOverlay(true);
+
+  // Subscribe to storage changes (instant sync across tabs when user edits in popup or options)
+  subscribeToStorageChanges(() => {
+    updateOverlay(true);
+  });
+
+  // Track SPA history changes (pushState / replaceState / popstate)
+  window.addEventListener('popstate', () => updateOverlay(true));
+
+  // Hook history pushState
+  const originalPushState = history.pushState;
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args);
+    setTimeout(() => updateOverlay(true), 10);
+  };
+
+  // Hook history replaceState
+  const originalReplaceState = history.replaceState;
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args);
+    setTimeout(() => updateOverlay(true), 10);
+  };
+
+  // Background service worker message listener
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message?.type === 'LAYERMARK_URL_CHANGED') {
+        updateOverlay(true);
+      }
+    });
+  }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initLayerMark);
+  document.addEventListener('DOMContentLoaded', initContentScript);
 } else {
-  initLayerMark();
+  initContentScript();
 }
 
 export {};

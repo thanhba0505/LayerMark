@@ -70,12 +70,15 @@ export interface LayerMarkTag {
   updatedAt: number;        // Epoch timestamp
 }
 
+export type AppLanguage = 'en' | 'vi';
+
 export interface LayerMarkSettings {
   defaultAnchor: AnchorPosition;
   enableGlobalToggle: boolean;
   collapseOnHover: boolean;
   showBadgeCounter: boolean;
   theme: 'light' | 'dark' | 'system';
+  language: AppLanguage;
 }
 
 export interface LayerMarkStorageSchema {
