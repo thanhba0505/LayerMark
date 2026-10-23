@@ -12,7 +12,13 @@ export type AnchorPosition =
   | 'top-banner'
   | 'bottom-banner'
   | 'ribbon-top-right'
-  | 'ribbon-top-left';
+  | 'ribbon-top-left'
+  | 'ribbon-bottom-right'
+  | 'ribbon-bottom-left';
+
+export type TagCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+export type TagShape = 'ribbon' | 'badge' | 'banner';
 
 export type TagSize = 'small' | 'medium' | 'large' | 'custom';
 
@@ -51,6 +57,8 @@ export interface TagStyle {
   size: TagSize;
   icon?: string;            // Lucide icon name or emoji (e.g. 'ShieldAlert', 'Server', '🚀')
   anchorPosition: AnchorPosition;
+  corner?: TagCorner;       // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  shape?: TagShape;         // 'ribbon' | 'badge' | 'banner'
   offsetX?: number;         // Margin/offset X in px
   offsetY?: number;         // Margin/offset Y in px
   showIconOnlyOnMobile?: boolean;

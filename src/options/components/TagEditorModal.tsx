@@ -12,7 +12,10 @@ import {
   Database,
   Sparkles,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Bookmark,
+  Tag as TagIcon,
+  Maximize2
 } from 'lucide-react';
 import { 
   LayerMarkTag, 
@@ -20,12 +23,15 @@ import {
   EnvironmentType, 
   RuleMatchType, 
   TagSize, 
+  TagShape,
+  TagCorner,
   UrlRule,
   AppLanguage 
 } from '../../shared/types';
 import { generateId } from '../../shared/storage';
 import { matchesRule } from '../../shared/matcher';
 import { getTranslation, TranslationKey } from '../../shared/i18n';
+import VisualPreviewBox from './VisualPreviewBox';
 
 interface TagEditorModalProps {
   isOpen: boolean;
@@ -40,10 +46,10 @@ const PRESET_COLORS = [
   '#DC2626', // Red (Prod)
   '#EA580C', // Orange
   '#D97706', // Amber (Staging)
+  '#7C3AED', // Purple (UAT)
   '#059669', // Emerald (Dev)
   '#0284C7', // Sky
   '#2563EB', // Blue (Local)
-  '#7C3AED', // Purple
   '#DB2777', // Pink
   '#475569', // Slate
   '#0F172A', // Dark Slate
@@ -61,7 +67,7 @@ export default function TagEditorModal({
 }: TagEditorModalProps) {
   const t = (key: TranslationKey) => getTranslation(key, lang);
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'style' | 'rules'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'style' | 'rules'>('style');
 
   // Form State
   const [name, setName] = useState('');
@@ -71,7 +77,9 @@ export default function TagEditorModal({
   const [enabled, setEnabled] = useState(true);
   const [priority, setPriority] = useState(0);
 
-  // Style State
+  // Style State: Default to Ribbon and Top-Right
+  const [shape, setShape] = useState<TagShape>('ribbon');
+  const [corner, setCorner] = useState<TagCorner>('top-right');
   const [bgColor, setBgColor] = useState('#DC2626');
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [borderColor, setBorderColor] = useState('');
@@ -80,7 +88,6 @@ export default function TagEditorModal({
   const [opacity, setOpacity] = useState(0.95);
   const [size, setSize] = useState<TagSize>('medium');
   const [icon, setIcon] = useState<string>('ShieldAlert');
-  const [anchorPosition, setAnchorPosition] = useState<AnchorPosition>('top-right');
   const [pulseAnimation, setPulseAnimation] = useState(true);
 
   // Rules State
@@ -100,6 +107,19 @@ export default function TagEditorModal({
       setEnabled(editingTag.enabled);
       setPriority(editingTag.priority);
 
+      // Determine shape and corner
+      const resolvedShape: TagShape = editingTag.style.shape || 
+        (editingTag.style.anchorPosition?.startsWith('ribbon') ? 'ribbon' :
+         editingTag.style.anchorPosition?.includes('banner') ? 'banner' : 'badge');
+
+      const resolvedCorner: TagCorner = editingTag.style.corner ||
+        (editingTag.style.anchorPosition?.includes('top-left') || editingTag.style.anchorPosition === 'top-left' ? 'top-left' :
+         editingTag.style.anchorPosition?.includes('bottom-left') || editingTag.style.anchorPosition === 'bottom-left' ? 'bottom-left' :
+         editingTag.style.anchorPosition?.includes('bottom-right') || editingTag.style.anchorPosition === 'bottom-right' ? 'bottom-right' : 'top-right');
+
+      setShape(resolvedShape);
+      setCorner(resolvedCorner);
+
       setBgColor(editingTag.style.bgColor);
       setTextColor(editingTag.style.textColor);
       setBorderColor(editingTag.style.borderColor || '');
@@ -108,12 +128,11 @@ export default function TagEditorModal({
       setOpacity(editingTag.style.opacity ?? 0.95);
       setSize(editingTag.style.size || 'medium');
       setIcon(editingTag.style.icon || '');
-      setAnchorPosition(editingTag.style.anchorPosition || 'top-right');
       setPulseAnimation(Boolean(editingTag.style.pulseAnimation));
 
       setRules(JSON.parse(JSON.stringify(editingTag.rules)));
     } else {
-      // Default new tag
+      // Default new tag: DEFAULT TO RIBBON
       setName('');
       setEnvironment('production');
       setProject('');
@@ -121,6 +140,8 @@ export default function TagEditorModal({
       setEnabled(true);
       setPriority(0);
 
+      setShape('ribbon'); // Default shape is Ribbon
+      setCorner('top-right');
       setBgColor('#DC2626');
       setTextColor('#FFFFFF');
       setBorderColor('');
@@ -129,7 +150,6 @@ export default function TagEditorModal({
       setOpacity(0.95);
       setSize('medium');
       setIcon('ShieldAlert');
-      setAnchorPosition('top-right');
       setPulseAnimation(true);
 
       if (initialDomain) {
@@ -194,6 +214,16 @@ export default function TagEditorModal({
     e.preventDefault();
     if (!name.trim()) return;
 
+    // Compute AnchorPosition for compatibility
+    let anchorPosition: AnchorPosition;
+    if (shape === 'ribbon') {
+      anchorPosition = `ribbon-${corner}` as AnchorPosition;
+    } else if (shape === 'banner') {
+      anchorPosition = corner.includes('bottom') ? 'bottom-banner' : 'top-banner';
+    } else {
+      anchorPosition = corner;
+    }
+
     await onSave(
       {
         name: name.trim(),
@@ -211,6 +241,8 @@ export default function TagEditorModal({
           opacity: Number(opacity),
           size,
           icon: icon || undefined,
+          shape,
+          corner,
           anchorPosition,
           pulseAnimation,
         },
@@ -237,9 +269,9 @@ export default function TagEditorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
               <Sparkles className="w-4 h-4" />
@@ -248,7 +280,7 @@ export default function TagEditorModal({
               <h2 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
                 {editingTag ? t('modalEditTitle') : t('modalCreateTitle')}
               </h2>
-              <p className="text-xs text-slate-500">Configure styling, rules, and priority</p>
+              <p className="text-xs text-slate-500">Configure visual ribbon/badge shape, corner, and URL triggers</p>
             </div>
           </div>
           <button
@@ -261,7 +293,7 @@ export default function TagEditorModal({
 
         {/* Tab Selector */}
         <div className="flex border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-50/50 dark:bg-slate-900/50">
-          {(['basic', 'style', 'rules'] as const).map((tab) => (
+          {(['style', 'basic', 'rules'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -272,8 +304,8 @@ export default function TagEditorModal({
                   : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
               }`}
             >
+              {tab === 'style' && `${t('tabStyle')} & ${t('tabPreview')}`}
               {tab === 'basic' && t('tabBasic')}
-              {tab === 'style' && t('tabStyle')}
               {tab === 'rules' && `${t('tabRules')} (${rules.length})`}
             </button>
           ))}
@@ -281,10 +313,30 @@ export default function TagEditorModal({
 
         {/* Body Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* TAB 1: BASIC INFO */}
-          {activeTab === 'basic' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* TAB: APPEARANCE, SHAPE, CORNER & INTERACTIVE PREVIEW */}
+          {activeTab === 'style' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Interactive Mini Browser Preview */}
+              <div className="lg:col-span-6 space-y-4">
+                <VisualPreviewBox
+                  name={name}
+                  shape={shape}
+                  corner={corner}
+                  bgColor={bgColor}
+                  textColor={textColor}
+                  borderColor={borderColor}
+                  borderWidth={borderWidth}
+                  borderRadius={borderRadius}
+                  opacity={opacity}
+                  size={size}
+                  icon={icon}
+                  pulseAnimation={pulseAnimation}
+                  onCornerChange={(c) => setCorner(c)}
+                  renderIconSvg={renderIconSvg}
+                  lang={lang}
+                />
+
+                {/* Tag Name Quick Input */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {t('tagName')} *
@@ -295,10 +347,223 @@ export default function TagEditorModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('tagNamePlaceholder')}
-                    className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden"
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden font-bold"
                   />
                 </div>
+              </div>
 
+              {/* Right Column: Shape, Position (4 Corners) & Visual Customization */}
+              <div className="lg:col-span-6 space-y-5">
+                {/* 1. SEPARATE TAG SHAPE (Default: Ribbon) */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    {t('tagShape')}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Ribbon */}
+                    <button
+                      type="button"
+                      onClick={() => setShape('ribbon')}
+                      className={`p-3 rounded-xl border-2 text-center transition flex flex-col items-center gap-1.5 ${
+                        shape === 'ribbon'
+                          ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <Bookmark className="w-5 h-5 text-indigo-500" />
+                      <span className="text-xs font-semibold">{t('shapeRibbon')}</span>
+                    </button>
+
+                    {/* Badge */}
+                    <button
+                      type="button"
+                      onClick={() => setShape('badge')}
+                      className={`p-3 rounded-xl border-2 text-center transition flex flex-col items-center gap-1.5 ${
+                        shape === 'badge'
+                          ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <TagIcon className="w-5 h-5 text-indigo-500" />
+                      <span className="text-xs font-semibold">{t('shapeBadge')}</span>
+                    </button>
+
+                    {/* Banner */}
+                    <button
+                      type="button"
+                      onClick={() => setShape('banner')}
+                      className={`p-3 rounded-xl border-2 text-center transition flex flex-col items-center gap-1.5 ${
+                        shape === 'banner'
+                          ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <Maximize2 className="w-5 h-5 text-indigo-500" />
+                      <span className="text-xs font-semibold">{t('shapeBanner')}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. SEPARATE 4 CORNER POSITIONS */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    {t('tagPosition')}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { id: 'top-left' as TagCorner, label: 'cornerTopLeft', icon: '↖' },
+                      { id: 'top-right' as TagCorner, label: 'cornerTopRight', icon: '↗' },
+                      { id: 'bottom-left' as TagCorner, label: 'cornerBottomLeft', icon: '↙' },
+                      { id: 'bottom-right' as TagCorner, label: 'cornerBottomRight', icon: '↘' },
+                    ]).map((cp) => (
+                      <button
+                        key={cp.id}
+                        type="button"
+                        onClick={() => setCorner(cp.id)}
+                        className={`p-2.5 rounded-xl border-2 text-left transition flex items-center justify-between ${
+                          corner === cp.id
+                            ? 'border-indigo-600 bg-indigo-50/60 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-xs font-medium">{t(cp.label as TranslationKey)}</span>
+                        <span className="text-sm font-bold">{cp.icon}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Color Swatches & Custom Picker */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {t('bgColor')}
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {PRESET_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setBgColor(c)}
+                        className={`w-6 h-6 rounded-full border-2 transition ${
+                          bgColor === c ? 'border-indigo-600 scale-110 shadow-sm' : 'border-white dark:border-slate-800'
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                    <input
+                      type="color"
+                      value={bgColor}
+                      onChange={(e) => setBgColor(e.target.value)}
+                      className="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer p-0.5 bg-transparent"
+                    />
+                    <span className="text-xs font-mono text-slate-500">{bgColor}</span>
+                  </div>
+                </div>
+
+                {/* Text Color & Size */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {t('textColor')}
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        className="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer p-0.5 bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        className="w-24 px-2 py-1 text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {t('size')}
+                    </label>
+                    <select
+                      value={size}
+                      onChange={(e) => setSize(e.target.value as TagSize)}
+                      className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl"
+                    >
+                      <option value="small">{t('sizeSmall')}</option>
+                      <option value="medium">{t('sizeMedium')}</option>
+                      <option value="large">{t('sizeLarge')}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Icon Selection */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {t('icon')}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIcon('')}
+                      className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition ${
+                        icon === '' ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600' : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {t('iconNone')}
+                    </button>
+                    {PRESET_ICONS.map((iName) => (
+                      <button
+                        key={iName}
+                        type="button"
+                        onClick={() => setIcon(iName)}
+                        className={`p-2 rounded-lg border transition flex items-center justify-center ${
+                          icon === iName ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                        }`}
+                        title={iName}
+                      >
+                        {renderIconSvg(iName)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pulse Alert Animation Toggle */}
+                <div className="flex items-center space-x-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="pulse-check"
+                    checked={pulseAnimation}
+                    onChange={(e) => setPulseAnimation(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded-sm border-slate-300 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="pulse-check" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                    {t('pulseAnimation')} — <span className="text-slate-400 font-normal">{t('pulseAnimationDesc')}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: BASIC INFO */}
+          {activeTab === 'basic' && (
+            <div className="space-y-4 max-w-xl">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {t('tagName')} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('tagNamePlaceholder')}
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {t('environment')}
@@ -317,21 +582,6 @@ export default function TagEditorModal({
                     <option value="custom">{t('custom')}</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('project')}
-                  </label>
-                  <input
-                    type="text"
-                    value={project}
-                    onChange={(e) => setProject(e.target.value)}
-                    placeholder={t('projectPlaceholder')}
-                    className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden"
-                  />
-                </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -346,6 +596,19 @@ export default function TagEditorModal({
                   />
                   <span className="text-[11px] text-slate-400 mt-0.5 block">0 = Higher priority</span>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {t('project')}
+                </label>
+                <input
+                  type="text"
+                  value={project}
+                  onChange={(e) => setProject(e.target.value)}
+                  placeholder={t('projectPlaceholder')}
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden"
+                />
               </div>
 
               <div>
@@ -376,164 +639,7 @@ export default function TagEditorModal({
             </div>
           )}
 
-          {/* TAB 2: APPEARANCE & STYLING */}
-          {activeTab === 'style' && (
-            <div className="space-y-5">
-              {/* Live Preview Box inside Modal */}
-              <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/40 text-center">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-                  {t('tabPreview')}
-                </span>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold text-xs uppercase shadow-md select-none transition-all"
-                  style={{
-                    backgroundColor: bgColor,
-                    color: textColor,
-                    border: borderWidth ? `${borderWidth}px solid ${borderColor || 'transparent'}` : 'none',
-                    borderRadius: `${borderRadius}px`,
-                    opacity: opacity,
-                  }}
-                >
-                  {pulseAnimation && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
-                  {icon && renderIconSvg(icon)}
-                  <span>{name || 'PREVIEW TAG'}</span>
-                </div>
-              </div>
-
-              {/* Color Presets & Pickers */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {t('bgColor')}
-                </label>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  {PRESET_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setBgColor(c)}
-                      className={`w-6 h-6 rounded-full border-2 transition ${
-                        bgColor === c ? 'border-indigo-600 scale-110 shadow-sm' : 'border-white dark:border-slate-800'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                  <input
-                    type="color"
-                    value={bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
-                    className="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer p-0.5 bg-transparent"
-                  />
-                  <span className="text-xs font-mono text-slate-500">{bgColor}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('textColor')}
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={textColor}
-                      onChange={(e) => setTextColor(e.target.value)}
-                      className="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer p-0.5 bg-transparent"
-                    />
-                    <input
-                      type="text"
-                      value={textColor}
-                      onChange={(e) => setTextColor(e.target.value)}
-                      className="w-28 px-2 py-1 text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('size')}
-                  </label>
-                  <select
-                    value={size}
-                    onChange={(e) => setSize(e.target.value as TagSize)}
-                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl"
-                  >
-                    <option value="small">{t('sizeSmall')}</option>
-                    <option value="medium">{t('sizeMedium')}</option>
-                    <option value="large">{t('sizeLarge')}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Anchor Position */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  {t('anchorPosition')}
-                </label>
-                <select
-                  value={anchorPosition}
-                  onChange={(e) => setAnchorPosition(e.target.value as AnchorPosition)}
-                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl"
-                >
-                  <option value="top-right">{t('anchorTopRight')}</option>
-                  <option value="top-left">{t('anchorTopLeft')}</option>
-                  <option value="bottom-right">{t('anchorBottomRight')}</option>
-                  <option value="bottom-left">{t('anchorBottomLeft')}</option>
-                  <option value="top-center">{t('anchorTopCenter')}</option>
-                  <option value="bottom-center">{t('anchorBottomCenter')}</option>
-                  <option value="top-banner">{t('anchorTopBanner')}</option>
-                  <option value="bottom-banner">{t('anchorBottomBanner')}</option>
-                  <option value="ribbon-top-right">{t('anchorRibbonTopRight')}</option>
-                  <option value="ribbon-top-left">{t('anchorRibbonTopLeft')}</option>
-                </select>
-              </div>
-
-              {/* Icon Selection */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {t('icon')}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIcon('')}
-                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition ${
-                      icon === '' ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600' : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                  >
-                    {t('iconNone')}
-                  </button>
-                  {PRESET_ICONS.map((iName) => (
-                    <button
-                      key={iName}
-                      type="button"
-                      onClick={() => setIcon(iName)}
-                      className={`p-2 rounded-lg border transition flex items-center justify-center ${
-                        icon === iName ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                      }`}
-                      title={iName}
-                    >
-                      {renderIconSvg(iName)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Pulse Alert Animation Toggle */}
-              <div className="flex items-center space-x-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="pulse-check"
-                  checked={pulseAnimation}
-                  onChange={(e) => setPulseAnimation(e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 rounded-sm border-slate-300 focus:ring-indigo-500"
-                />
-                <label htmlFor="pulse-check" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                  {t('pulseAnimation')} — <span className="text-slate-400 font-normal">{t('pulseAnimationDesc')}</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: URL RULES & TESTER */}
+          {/* TAB: URL RULES & TESTER */}
           {activeTab === 'rules' && (
             <div className="space-y-6">
               <div>
@@ -604,9 +710,9 @@ export default function TagEditorModal({
                             rule.type === 'exact-domain'
                               ? 'e.g. github.com'
                               : rule.type === 'wildcard-domain'
-                              ? 'e.g. *.staging.myapp.com'
+                              ? 'e.g. *.stg.* or *.staging.myapp.com'
                               : rule.type === 'port'
-                              ? 'e.g. localhost:3000 or *:5173'
+                              ? 'e.g. localhost:* or 127.0.0.1:*'
                               : rule.type === 'path-pattern'
                               ? 'e.g. /admin/*'
                               : '^https://.*\\.dev'

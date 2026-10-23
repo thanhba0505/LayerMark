@@ -463,8 +463,8 @@ export default function App() {
                                   {tag.project}
                                 </span>
                               )}
-                              <span className="text-[10px] text-slate-400">
-                                {tag.style.anchorPosition}
+                              <span className="text-[10px] text-slate-400 capitalize">
+                                {tag.style.shape || (tag.style.anchorPosition?.startsWith('ribbon') ? 'ribbon' : 'badge')} • {tag.style.corner || tag.style.anchorPosition}
                               </span>
                             </div>
 

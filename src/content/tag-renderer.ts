@@ -18,26 +18,40 @@ const ICON_SVGS: Record<string, string> = {
 };
 
 /**
+ * Resolves the target anchor zone key for a tag based on its shape and corner.
+ */
+export function resolveAnchorZone(tag: LayerMarkTag): string {
+  const shape = tag.style.shape || (tag.style.anchorPosition?.startsWith('ribbon') ? 'ribbon' : tag.style.anchorPosition?.includes('banner') ? 'banner' : 'badge');
+  const corner = tag.style.corner || (tag.style.anchorPosition?.includes('left') ? 'top-left' : 'top-right');
+
+  if (shape === 'ribbon') {
+    return `ribbon-${corner}`;
+  }
+  if (shape === 'banner') {
+    return corner.includes('bottom') ? 'bottom-banner' : 'top-banner';
+  }
+  return corner;
+}
+
+/**
  * Creates the badge DOM element.
  */
 function createBadgeElement(tag: LayerMarkTag, settings: LayerMarkSettings): HTMLElement {
   const badge = document.createElement('div');
   const style = tag.style;
+  const shape = style.shape || (style.anchorPosition?.startsWith('ribbon') ? 'ribbon' : style.anchorPosition?.includes('banner') ? 'banner' : 'badge');
+  const corner = style.corner || (style.anchorPosition?.includes('left') ? 'top-left' : 'top-right');
 
   badge.className = `lm-badge lm-badge-${style.size || 'medium'}`;
   if (settings.collapseOnHover) {
     badge.classList.add('lm-badge-collapse-hover');
   }
 
-  // Handle special banner and ribbon classes
-  if (style.anchorPosition === 'top-banner') {
+  // Handle ribbon and banner classes
+  if (shape === 'ribbon') {
+    badge.classList.add(`lm-ribbon-${corner}`);
+  } else if (shape === 'banner') {
     badge.classList.add('lm-banner');
-  } else if (style.anchorPosition === 'bottom-banner') {
-    badge.classList.add('lm-banner');
-  } else if (style.anchorPosition === 'ribbon-top-right') {
-    badge.classList.add('lm-ribbon-right');
-  } else if (style.anchorPosition === 'ribbon-top-left') {
-    badge.classList.add('lm-ribbon-left');
   }
 
   // Apply visual styling
@@ -51,7 +65,7 @@ function createBadgeElement(tag: LayerMarkTag, settings: LayerMarkSettings): HTM
     badge.style.border = 'none';
   }
 
-  if (style.borderRadius !== undefined) {
+  if (style.borderRadius !== undefined && shape !== 'ribbon') {
     badge.style.borderRadius = `${style.borderRadius}px`;
   }
 
@@ -73,7 +87,6 @@ function createBadgeElement(tag: LayerMarkTag, settings: LayerMarkSettings): HTM
     if (ICON_SVGS[style.icon]) {
       innerHtml += `<span class="lm-icon" style="display:flex;align-items:center;">${ICON_SVGS[style.icon]}</span>`;
     } else {
-      // Treat as emoji or text symbol
       innerHtml += `<span class="lm-icon">${style.icon}</span>`;
     }
   }
@@ -99,20 +112,20 @@ export function renderActiveTags(
     return;
   }
 
-  // Group tags by anchor position
-  const tagsByPosition = new Map<string, LayerMarkTag[]>();
+  // Group tags by resolved anchor zone
+  const tagsByZone = new Map<string, LayerMarkTag[]>();
 
   for (const tag of matchingTags) {
-    const pos = tag.style.anchorPosition || 'top-right';
-    if (!tagsByPosition.has(pos)) {
-      tagsByPosition.set(pos, []);
+    const zoneKey = resolveAnchorZone(tag);
+    if (!tagsByZone.has(zoneKey)) {
+      tagsByZone.set(zoneKey, []);
     }
-    tagsByPosition.get(pos)!.push(tag);
+    tagsByZone.get(zoneKey)!.push(tag);
   }
 
-  // Render each position's group
-  for (const [position, tags] of tagsByPosition.entries()) {
-    const zone = hostManager.getAnchorZone(position);
+  // Render each zone's group
+  for (const [zoneKey, tags] of tagsByZone.entries()) {
+    const zone = hostManager.getAnchorZone(zoneKey);
 
     for (const tag of tags) {
       const badge = createBadgeElement(tag, settings);

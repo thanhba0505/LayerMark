@@ -34,7 +34,7 @@ const SCOPED_STYLES = `
   z-index: 2147483647;
 }
 
-/* Zone Positions */
+/* 4 Standard Corner Badge Zones */
 .lm-zone-top-left {
   top: 12px;
   left: 12px;
@@ -79,6 +79,7 @@ const SCOPED_STYLES = `
   align-items: center;
 }
 
+/* Full Width Banners */
 .lm-zone-top-banner {
   top: 0;
   left: 0;
@@ -95,6 +96,7 @@ const SCOPED_STYLES = `
   align-items: center;
 }
 
+/* 4 Diagonal Ribbon Corner Zones */
 .lm-zone-ribbon-top-right {
   top: 0;
   right: 0;
@@ -105,6 +107,22 @@ const SCOPED_STYLES = `
 
 .lm-zone-ribbon-top-left {
   top: 0;
+  left: 0;
+  width: 140px;
+  height: 140px;
+  overflow: hidden;
+}
+
+.lm-zone-ribbon-bottom-right {
+  bottom: 0;
+  right: 0;
+  width: 140px;
+  height: 140px;
+  overflow: hidden;
+}
+
+.lm-zone-ribbon-bottom-left {
+  bottom: 0;
   left: 0;
   width: 140px;
   height: 140px;
@@ -129,7 +147,7 @@ const SCOPED_STYLES = `
 
 /* Hover Dim / Minimize Effect */
 .lm-badge-collapse-hover:hover {
-  opacity: 0.25 !important;
+  opacity: 0.2 !important;
   transform: scale(0.92);
 }
 
@@ -174,8 +192,8 @@ const SCOPED_STYLES = `
   justify-content: center;
 }
 
-/* Ribbon Styles */
-.lm-ribbon-right {
+/* 4 Diagonal Ribbon Styles */
+.lm-ribbon-top-right, .lm-ribbon-right {
   position: absolute;
   top: 25px;
   right: -40px;
@@ -186,11 +204,34 @@ const SCOPED_STYLES = `
   justify-content: center;
 }
 
-.lm-ribbon-left {
+.lm-ribbon-top-left, .lm-ribbon-left {
   position: absolute;
   top: 25px;
   left: -40px;
+  width: 160px;
   transform: rotate(-45deg);
+  text-align: center;
+  padding: 6px 0;
+  justify-content: center;
+}
+
+.lm-ribbon-bottom-right {
+  position: absolute;
+  bottom: 25px;
+  right: -40px;
+  width: 160px;
+  transform: rotate(-45deg);
+  text-align: center;
+  padding: 6px 0;
+  justify-content: center;
+}
+
+.lm-ribbon-bottom-left {
+  position: absolute;
+  bottom: 25px;
+  left: -40px;
+  width: 160px;
+  transform: rotate(45deg);
   text-align: center;
   padding: 6px 0;
   justify-content: center;
@@ -204,7 +245,6 @@ export function setupShadowHost(): ShadowHostManager {
   if (host && host.shadowRoot) {
     shadowRoot = host.shadowRoot;
   } else {
-    // If element exists without shadowRoot, remove it
     if (host) host.remove();
 
     host = document.createElement('div');
@@ -216,7 +256,6 @@ export function setupShadowHost(): ShadowHostManager {
     styleEl.textContent = SCOPED_STYLES;
     shadowRoot.appendChild(styleEl);
 
-    // Append host to DOM safely
     if (document.body) {
       document.body.appendChild(host);
     } else {

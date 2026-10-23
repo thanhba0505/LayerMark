@@ -218,8 +218,8 @@ export default function App() {
                   </div>
 
                   <div className="min-w-0">
-                    <div className="text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate">
-                      {tag.project ? `${tag.project} • ` : ''}{tag.style.anchorPosition}
+                    <div className="text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate capitalize">
+                      {tag.project ? `${tag.project} • ` : ''}{tag.style.shape || 'ribbon'} • {tag.style.corner || tag.style.anchorPosition}
                     </div>
                   </div>
                 </div>
