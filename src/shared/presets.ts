@@ -1,7 +1,7 @@
 import { LayerMarkTag, LayerMarkSettings } from './types';
 
 export const DEFAULT_SETTINGS: LayerMarkSettings = {
-  defaultAnchor: 'ribbon-top-right',
+  defaultAnchor: 'ribbon-top-left',
   enableGlobalToggle: true,
   collapseOnHover: true,
   showBadgeCounter: true,
@@ -32,8 +32,8 @@ export function getDefaultPresets(): LayerMarkTag[] {
         size: 'medium',
         icon: 'ShieldAlert',
         shape: 'ribbon',
-        corner: 'top-right',
-        anchorPosition: 'ribbon-top-right',
+        corner: 'top-left',
+        anchorPosition: 'ribbon-top-left',
         pulseAnimation: true,
       },
       rules: [
@@ -74,8 +74,8 @@ export function getDefaultPresets(): LayerMarkTag[] {
         size: 'medium',
         icon: 'Server',
         shape: 'ribbon',
-        corner: 'top-right',
-        anchorPosition: 'ribbon-top-right',
+        corner: 'top-left',
+        anchorPosition: 'ribbon-top-left',
         pulseAnimation: false,
       },
       rules: [
@@ -116,8 +116,8 @@ export function getDefaultPresets(): LayerMarkTag[] {
         size: 'medium',
         icon: 'Server',
         shape: 'ribbon',
-        corner: 'top-right',
-        anchorPosition: 'ribbon-top-right',
+        corner: 'top-left',
+        anchorPosition: 'ribbon-top-left',
         pulseAnimation: false,
       },
       rules: [

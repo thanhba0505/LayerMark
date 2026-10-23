@@ -77,9 +77,9 @@ export default function TagEditorModal({
   const [enabled, setEnabled] = useState(true);
   const [priority, setPriority] = useState(0);
 
-  // Style State: Default to Ribbon and Top-Right
+  // Style State: Default to Ribbon and Top-Left
   const [shape, setShape] = useState<TagShape>('ribbon');
-  const [corner, setCorner] = useState<TagCorner>('top-right');
+  const [corner, setCorner] = useState<TagCorner>('top-left');
   const [bgColor, setBgColor] = useState('#DC2626');
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [borderColor, setBorderColor] = useState('');
@@ -141,7 +141,7 @@ export default function TagEditorModal({
       setPriority(0);
 
       setShape('ribbon'); // Default shape is Ribbon
-      setCorner('top-right');
+      setCorner('top-left'); // Default corner is Top-Left
       setBgColor('#DC2626');
       setTextColor('#FFFFFF');
       setBorderColor('');

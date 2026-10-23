@@ -26,16 +26,24 @@ describe('LayerMark Storage Manager', () => {
     const prodTag = tags.find((t) => t.environment === 'production');
     expect(prodTag).toBeDefined();
     expect(prodTag?.name).toBe('PRODUCTION');
+    expect(prodTag?.style.shape).toBe('ribbon');
+    expect(prodTag?.style.corner).toBe('top-left');
 
     const uatTag = tags.find((t) => t.name === 'UAT');
     expect(uatTag).toBeDefined();
     expect(uatTag?.rules.some((r) => r.pattern === '*.uat.*')).toBe(true);
+    expect(uatTag?.style.shape).toBe('ribbon');
+    expect(uatTag?.style.corner).toBe('top-left');
 
     const stagingTag = tags.find((t) => t.name === 'STAGING');
     expect(stagingTag?.rules.some((r) => r.pattern === '*.stg.*')).toBe(true);
+    expect(stagingTag?.style.shape).toBe('ribbon');
+    expect(stagingTag?.style.corner).toBe('top-left');
 
     const localTag = tags.find((t) => t.name === 'LOCAL DEV');
     expect(localTag?.rules.some((r) => r.pattern === 'localhost:*')).toBe(true);
+    expect(localTag?.style.shape).toBe('ribbon');
+    expect(localTag?.style.corner).toBe('top-left');
   });
 
   it('adds and retrieves a new tag', async () => {
