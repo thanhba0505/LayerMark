@@ -113,8 +113,8 @@ export const translations = {
     anchorPosition: 'Screen Position',
     pulseAnimation: 'Pulse Alert Animation',
     pulseAnimationDesc: 'Adds a subtle pulsing alert badge (recommended for Production).',
-    collapseOnHover: 'Minimize on Hover',
-    collapseOnHoverDesc: 'Dim or minimize the tag when hovering to avoid obstructing page content.',
+    collapseOnHover: 'Slide & Fade on Hover',
+    collapseOnHoverDesc: 'Smoothly slide into corner and fade out on hover to allow clicking underlying website buttons.',
 
     // Anchor Positions
     anchorTopLeft: 'Top Left',
@@ -277,8 +277,8 @@ export const translations = {
     anchorPosition: 'Vị Trí Hiển Thị',
     pulseAnimation: 'Hiệu Ứng Nhấp Nháy Cảnh Báo',
     pulseAnimationDesc: 'Thêm chấm tròn nhấp nháy thu hút sự chú ý (khuyên dùng cho Production).',
-    collapseOnHover: 'Thu Nhỏ Khi Rê Chuột',
-    collapseOnHoverDesc: 'Tự động làm mờ hoặc thu nhỏ tag khi chuột rê vào để không che khuất nội dung website.',
+    collapseOnHover: 'Trượt Ẩn Khi Rê Chuột',
+    collapseOnHoverDesc: 'Tự động trượt vào góc và mờ đi khi rê chuột vào để có thể bấm các nút bên dưới website.',
 
     // Anchor Positions
     anchorTopLeft: 'Góc Trên Trái',

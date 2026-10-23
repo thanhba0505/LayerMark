@@ -43,15 +43,59 @@ function createBadgeElement(tag: LayerMarkTag, settings: LayerMarkSettings): HTM
   const corner = style.corner || (style.anchorPosition?.includes('left') ? 'top-left' : 'top-right');
 
   badge.className = `lm-badge lm-badge-${style.size || 'medium'}`;
-  if (settings.collapseOnHover) {
-    badge.classList.add('lm-badge-collapse-hover');
-  }
 
-  // Handle ribbon and banner classes
+  // Handle ribbon, banner and badge-pill classes
   if (shape === 'ribbon') {
     badge.classList.add(`lm-ribbon-${corner}`);
   } else if (shape === 'banner') {
     badge.classList.add('lm-banner');
+  } else {
+    badge.classList.add('lm-badge-pill');
+  }
+
+  // Slide & Fade on Hover: Allows instant clicking on website elements directly underneath
+  if (settings.collapseOnHover) {
+    badge.classList.add('lm-badge-collapse-hover');
+
+    let isTucked = false;
+    let savedRect: DOMRect | null = null;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isTucked || !savedRect) return;
+      if (!badge.isConnected) {
+        window.removeEventListener('mousemove', onMouseMove);
+        return;
+      }
+
+      const buffer = 15;
+      const isInside =
+        e.clientX >= savedRect.left - buffer &&
+        e.clientX <= savedRect.right + buffer &&
+        e.clientY >= savedRect.top - buffer &&
+        e.clientY <= savedRect.bottom + buffer;
+
+      const isOutsideWindow =
+        e.clientX < 0 ||
+        e.clientY < 0 ||
+        e.clientX > window.innerWidth ||
+        e.clientY > window.innerHeight;
+
+      if (!isInside || isOutsideWindow) {
+        isTucked = false;
+        badge.classList.remove('lm-badge-tucked');
+        window.removeEventListener('mousemove', onMouseMove);
+      }
+    };
+
+    badge.addEventListener('mouseenter', () => {
+      if (isTucked) return;
+      savedRect = badge.getBoundingClientRect();
+      if (savedRect.width === 0 && savedRect.height === 0) return;
+
+      isTucked = true;
+      badge.classList.add('lm-badge-tucked');
+      window.addEventListener('mousemove', onMouseMove);
+    });
   }
 
   // Apply visual styling

@@ -140,15 +140,9 @@ const SCOPED_STYLES = `
   letter-spacing: 0.05em;
   text-transform: uppercase;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
   line-height: 1;
-}
-
-/* Hover Dim / Minimize Effect */
-.lm-badge-collapse-hover:hover {
-  opacity: 0.2 !important;
-  transform: scale(0.92);
 }
 
 /* Badge Sizes */
@@ -235,6 +229,61 @@ const SCOPED_STYLES = `
   text-align: center;
   padding: 6px 0;
   justify-content: center;
+}
+
+/* TUCKED / SLIDE-INTO-CORNER HOVER EFFECT (Allows clicks directly underneath) */
+.lm-badge-tucked {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
+.lm-ribbon-top-left.lm-badge-tucked {
+  transform: translate(-50px, -50px) rotate(-45deg) !important;
+}
+
+.lm-ribbon-top-right.lm-badge-tucked {
+  transform: translate(50px, -50px) rotate(45deg) !important;
+}
+
+.lm-ribbon-bottom-left.lm-badge-tucked {
+  transform: translate(-50px, 50px) rotate(45deg) !important;
+}
+
+.lm-ribbon-bottom-right.lm-badge-tucked {
+  transform: translate(50px, 50px) rotate(-45deg) !important;
+}
+
+.lm-zone-top-left .lm-badge-pill.lm-badge-tucked {
+  transform: translate(-30px, -30px) scale(0.6) !important;
+}
+
+.lm-zone-top-right .lm-badge-pill.lm-badge-tucked {
+  transform: translate(30px, -30px) scale(0.6) !important;
+}
+
+.lm-zone-bottom-left .lm-badge-pill.lm-badge-tucked {
+  transform: translate(-30px, 30px) scale(0.6) !important;
+}
+
+.lm-zone-bottom-right .lm-badge-pill.lm-badge-tucked {
+  transform: translate(30px, 30px) scale(0.6) !important;
+}
+
+.lm-zone-top-center .lm-badge-pill.lm-badge-tucked {
+  transform: translateY(-30px) scale(0.6) !important;
+}
+
+.lm-zone-bottom-center .lm-badge-pill.lm-badge-tucked {
+  transform: translateY(30px) scale(0.6) !important;
+}
+
+.lm-banner.lm-badge-tucked {
+  transform: translateY(-100%) !important;
+}
+
+.lm-zone-bottom-banner .lm-banner.lm-badge-tucked {
+  transform: translateY(100%) !important;
 }
 `;
 
