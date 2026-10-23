@@ -1,0 +1,70 @@
+name: Automated Extension Release & Store Publish
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on release tags, e.g. v1.0.1, v1.1.0
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build-and-publish:
+    name: Build, Test & Publish to Stores
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Tests
+        run: pnpm run test
+
+      - name: Type Check
+        run: pnpm run type-check
+
+      - name: Build & Package Extension
+        run: pnpm run package
+
+      - name: Upload Zip as Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: layermark-extension-zip
+          path: layermark.zip
+
+      # Publish to Chrome Web Store (Active when secrets are configured)
+      - name: Publish to Chrome Web Store
+        if: env.CHROME_CLIENT_ID != ''
+        uses: mnao305/chrome-extension-upload@v5.0.0
+        env:
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+        with:
+          file-name: 'layermark.zip'
+          app-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+      # Publish to Microsoft Edge Add-ons (Active when secrets are configured)
+      - name: Publish to Microsoft Edge Add-ons
+        if: env.EDGE_PRODUCT_ID != ''
+        uses: wdzeng/edge-addon@v1.2.3
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+        with:
+          product-id: ${{ secrets.EDGE_PRODUCT_ID }}
+          zip-path: 'layermark.zip'
+          client-id: ${{ secrets.EDGE_CLIENT_ID }}
+          api-key: ${{ secrets.EDGE_API_KEY }}
