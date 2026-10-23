@@ -45,11 +45,23 @@ export function matchesRule(url: string, rule: UrlRule): boolean {
     }
 
     case 'wildcard-domain': {
-      // e.g. "*.staging.com", "*.prod.*", "dev.*"
+      // e.g. "*.staging.com", "*.prod.*", "dev.*", "*.stg.*", "*.uat.*"
       const cleanPattern = pattern.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-      // Escape regex special chars except *
-      const escaped = cleanPattern.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&').replace(/\*/g, '.*');
-      const regex = new RegExp(`^${escaped}$`, 'i');
+      
+      // If pattern starts with `*.`, allow matching with or without preceding subdomains
+      let basePattern = cleanPattern;
+      let matchPrefix = '';
+      if (basePattern.startsWith('*.')) {
+        basePattern = basePattern.slice(2);
+        matchPrefix = '(?:.*\\.)?';
+      }
+
+      // Escape all regex special chars except *
+      const escaped = basePattern
+        .replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&')
+        .replace(/\*/g, '.*');
+
+      const regex = new RegExp(`^${matchPrefix}${escaped}$`, 'i');
       return regex.test(hostname);
     }
 

@@ -310,6 +310,7 @@ export default function TagEditorModal({
                   >
                     <option value="production">{t('production')}</option>
                     <option value="staging">{t('staging')}</option>
+                    <option value="uat">{t('uat')}</option>
                     <option value="development">{t('development')}</option>
                     <option value="local">{t('local')}</option>
                     <option value="testing">{t('testing')}</option>

@@ -37,9 +37,30 @@ describe('LayerMark URL Matcher Engine', () => {
       enabled: true,
     };
 
+    const ruleStg: UrlRule = {
+      id: 'r_stg',
+      type: 'wildcard-domain',
+      pattern: '*.stg.*',
+      enabled: true,
+    };
+
+    const ruleUat: UrlRule = {
+      id: 'r_uat',
+      type: 'wildcard-domain',
+      pattern: '*.uat.*',
+      enabled: true,
+    };
+
     it('matches subdomains with wildcard', () => {
       expect(matchesRule('https://api.staging.app.com/dashboard', ruleSubdomain)).toBe(true);
       expect(matchesRule('https://web.staging.app.com', ruleSubdomain)).toBe(true);
+    });
+
+    it('matches stg and uat patterns at root subdomain and sub-subdomain', () => {
+      expect(matchesRule('https://stg.company.com', ruleStg)).toBe(true);
+      expect(matchesRule('https://api.stg.company.com', ruleStg)).toBe(true);
+      expect(matchesRule('https://uat.company.com', ruleUat)).toBe(true);
+      expect(matchesRule('https://web.uat.company.com/login', ruleUat)).toBe(true);
     });
 
     it('matches any domain with prod in it', () => {

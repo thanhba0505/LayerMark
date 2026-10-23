@@ -26,6 +26,16 @@ describe('LayerMark Storage Manager', () => {
     const prodTag = tags.find((t) => t.environment === 'production');
     expect(prodTag).toBeDefined();
     expect(prodTag?.name).toBe('PRODUCTION');
+
+    const uatTag = tags.find((t) => t.name === 'UAT');
+    expect(uatTag).toBeDefined();
+    expect(uatTag?.rules.some((r) => r.pattern === '*.uat.*')).toBe(true);
+
+    const stagingTag = tags.find((t) => t.name === 'STAGING');
+    expect(stagingTag?.rules.some((r) => r.pattern === '*.stg.*')).toBe(true);
+
+    const localTag = tags.find((t) => t.name === 'LOCAL DEV');
+    expect(localTag?.rules.some((r) => r.pattern === 'localhost:*')).toBe(true);
   });
 
   it('adds and retrieves a new tag', async () => {

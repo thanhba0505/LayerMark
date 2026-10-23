@@ -364,7 +364,7 @@ export default function App() {
 
         {/* Environment Filter Pills */}
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs font-medium">
-          {(['all', 'production', 'staging', 'development', 'local', 'testing', 'custom'] as const).map((env) => (
+          {(['all', 'production', 'staging', 'uat', 'development', 'local', 'testing', 'custom'] as const).map((env) => (
             <button
               key={env}
               onClick={() => setSelectedEnv(env)}

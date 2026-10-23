@@ -34,6 +34,7 @@ export interface UrlRule {
 export type EnvironmentType = 
   | 'production'
   | 'staging'
+  | 'uat'
   | 'development'
   | 'local'
   | 'testing'
